@@ -19,6 +19,7 @@ import PlantDetailModal from './components/Encyclopedia/PlantDetailModal';
 import { 
   loadTrees, 
   saveTrees, 
+  syncTreesFromCloud,
   addTree, 
   updateTree, 
   addTreeEvent, 
@@ -60,10 +61,17 @@ export default function App() {
   const [targetTreeForAI, setTargetTreeForAI] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Load trees on mount
+  // Load trees on mount & sync with Supabase Cloud
   useEffect(() => {
     const loaded = loadTrees();
     setTrees(loaded);
+
+    // Asynchronously sync from cloud if connected
+    syncTreesFromCloud().then((cloudTrees) => {
+      if (cloudTrees && cloudTrees.length > 0) {
+        setTrees(cloudTrees);
+      }
+    });
   }, []);
 
   const aggregateImpact = calculateAggregateImpact(trees);

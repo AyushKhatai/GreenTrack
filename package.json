@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/AyushKhatai/GreenTrack#readme",
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
     "canvas-confetti": "^1.9.4",
     "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
