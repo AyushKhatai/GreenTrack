@@ -7,15 +7,12 @@ import {
   Trophy, 
   Plus, 
   QrCode, 
-  Download, 
   Sparkles, 
   Menu, 
   X, 
-  RotateCcw,
   Flame,
   ShieldAlert
 } from 'lucide-react';
-import { exportDataAsCSV, exportDataAsJSON, resetToDemoData } from '../services/storageService';
 import { hasGeminiApiKey } from '../services/geminiService';
 import { loadGuilds, getUserGuild } from '../data/guildsData';
 
@@ -24,11 +21,9 @@ export default function Navbar({
   setCurrentTab, 
   aggregateImpact, 
   onOpenPlantModal, 
-  onOpenQRScanner,
-  onResetData 
+  onOpenQRScanner
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [dataMenuOpen, setDataMenuOpen] = useState(false);
 
   const guilds = loadGuilds();
   const userGuildId = getUserGuild();
@@ -125,44 +120,6 @@ export default function Navbar({
             >
               <QrCode className="w-4 h-4" />
             </button>
-
-            {/* Data & Export Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setDataMenuOpen(!dataMenuOpen)}
-                className="p-2.5 rounded-xl bg-slate-900/90 text-slate-300 border border-slate-800 hover:border-emerald-500/30 hover:text-emerald-300 transition-all"
-                title="Export & Tools"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-
-              {dataMenuOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-emerald-500/30 shadow-2xl p-2 z-50 animate-enter text-xs space-y-1">
-                  <div className="px-3 py-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
-                    Data Management
-                  </div>
-                  <button
-                    onClick={() => { exportDataAsCSV(); setDataMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/40 text-slate-200 flex items-center gap-2"
-                  >
-                    <Download className="w-3.5 h-3.5 text-emerald-400" /> Export CSV Data
-                  </button>
-                  <button
-                    onClick={() => { exportDataAsJSON(); setDataMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/40 text-slate-200 flex items-center gap-2"
-                  >
-                    <Download className="w-3.5 h-3.5 text-teal-400" /> Export JSON Backup
-                  </button>
-                  <div className="border-t border-slate-800 my-1"></div>
-                  <button
-                    onClick={() => { onResetData(); setDataMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-950/40 text-red-400 flex items-center gap-2"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-red-400" /> Reset Demo Trees
-                  </button>
-                </div>
-              )}
-            </div>
 
             {/* Plant New Sapling Button */}
             <button
