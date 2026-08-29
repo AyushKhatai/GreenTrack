@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary: #020b08;
+    --bg-surface: #071912;
+    --bg-card: rgba(12, 34, 26, 0.7);
+    --border-card: rgba(52, 211, 153, 0.15);
+  }
+
+  body {
+    background-color: #030c08;
+    color: #f1f5f9;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(3, 12, 8, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: #059669;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
+/* Glassmorphic UI tokens */
+.glass-panel {
+  background: rgba(12, 34, 26, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(52, 211, 153, 0.18);
+}
+
+.glass-panel-hover {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-panel-hover:hover {
+  border-color: rgba(52, 211, 153, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -10px rgba(16, 185, 129, 0.15);
+}
+
+.glass-input {
+  background: rgba(4, 18, 13, 0.8);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  color: #f8fafc;
+}
+.glass-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  outline: none;
+}
+
+/* Leaflet Custom Marker Styles */
+.custom-tree-pin {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-tree-pin:hover {
+  transform: scale(1.18);
+  z-index: 1000;
+}
+
+.custom-tree-pin::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 7px 7px 0;
+  border-style: solid;
+}
+
+.pin-healthy {
+  background: linear-gradient(135deg, #10b981, #047857);
+}
+.pin-healthy::after {
+  border-color: #047857 transparent transparent transparent;
+}
+
+.pin-attention {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+.pin-attention::after {
+  border-color: #d97706 transparent transparent transparent;
+}
+
+.pin-critical {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+.pin-critical::after {
+  border-color: #b91c1c transparent transparent transparent;
+}
+
+/* Reticle corner animations */
+@keyframes laserSweep {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+.animate-laser {
+  animation: laserSweep 2.2s ease-in-out infinite;
+}
+
+/* Leaflet Dark Mode Tiles & Popups */
+.leaflet-popup-content-wrapper {
+  background: #071912 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(52, 211, 153, 0.3) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-tip {
+  background: #071912 !important;
+}

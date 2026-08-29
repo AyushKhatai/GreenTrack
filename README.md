@@ -1,54 +1,86 @@
-# 🌳 GreenTrack: AI-Verified Tree Survival Platform
+# 🌳 GreenTrack AI 2.0: Phygital Tree Survival & Urban Forestry Platform
 
-> **Submission for [Hackathon Name]**
-> A web platform to track, verify, and sustain post-plantation tree care through community participation and AI diagnostics.
-
----
-
-## 🚀 The Problem
-Millions of trees are planted every year during drives, but **up to 50% die within the first year** due to lack of aftercare. There is currently no transparent way to verify if a sapling is still alive, healthy, or being watered after the initial planting day.
-
-## 💡 The Solution
-**GreenTrack** is a "Phygital" (Physical + Digital) platform that gamifies tree care. We don't just count planted trees; we track their **survival**.
-
-### 🌟 Key Features
-* **🤖 AI Tree Doctor:** Uses `TensorFlow.js` and a custom-trained model to diagnose plant health. It detects if a plant is healthy, dead, or missing.
-* **📍 Smart Geo-Tagging:** Automatically converts GPS coordinates into readable addresses (Reverse Geocoding) for every tree.
-* **🔗 QR Digital Twin:** Generates a unique QR code for every sapling. Scan the real tree to see its digital history.
-* **📈 Impact Metrics:** Real-time calculation of Survival Rate and CO₂ Offset.
-* **🏆 Community Leaderboard:** Gamifies the experience to encourage top "Guardians."
+> **A full-fledged, state-of-the-art web application to track, verify, and sustain post-plantation tree survival through AI computer vision diagnostics, QR Digital Twins, and community gamification.**
 
 ---
 
-## 🛠️ Tech Stack
-
-* **Frontend:** HTML5, JavaScript (ES6+)
-* **Styling:** Tailwind CSS (CDN)
-* **Mapping:** Leaflet.js + OpenStreetMap API
-* **AI / ML:** Google Teachable Machine + TensorFlow.js
-* **Utilities:** QRCode.js, LocalStorage (Demo Database)
-* **Deployment:** GitHub Pages
+## 🚀 The Core Problem
+Millions of saplings are planted globally every year in green drives, but **up to 50% die within the first 12 months** due to lack of post-plantation monitoring and care. Most initiatives only count trees planted on Day 1 — **GreenTrack tracks their survival for life**.
 
 ---
 
-## 🤖 How the AI Works
-We use a hybrid approach to ensure accuracy:
-1.  **Object Detection:** A custom model trained on **Google Teachable Machine** classifies the image into `Healthy`, `Dead`, or `Not a Plant`.
-2.  **Pixel Analysis:** If the AI is unsure, our fallback algorithm analyzes the **Green-to-Brown pixel ratio** to detect dehydration or disease.
+## 🌟 Key Features
+
+### 1. 🌿 Advanced AI Plant Doctor & Species Identifier
+* **Multi-Species Identification:** Instant recognition across 35+ common urban trees, garden plants, and houseplants with botanical taxonomy, family, and confidence ratings.
+* **Computer Vision Lesion Analysis:** Pixel-level chromatic extraction that mathematically identifies healthy chlorophyll, chlorosis (yellowing), fungal/bacterial necrotic lesions, and powdery mildew spores.
+* **Health Score (0-100%):** Real-time vigor score with visual lesion heatmap overlay and severity ratings.
+* **7-Day Actionable Care Prescription:** Day 1 emergency intervention, Day 3 moisture check, Day 7 follow-up protocol with organic and chemical remedies.
+* **1-Click Test Presets & Live Camera HUD:** Instant testing with built-in specimen presets or live camera scanning with targeting reticle.
+
+### 2. 🤖 Dr. Flora (Interactive AI Botanist)
+* Interactive AI chatbot assistant trained in plant pathology, symptoms, soil pH, organic pest control, and custom watering schedules.
+* Quick-action prompt chips for instant answers on common plant issues.
+
+### 3. 🗺️ Interactive GIS Map Tracker
+* High-performance Leaflet.js map with custom color-coded pins (*Optimal Vigor*, *Needs Attention*, *Critical / Blight*).
+* Real-time GPS coordinate acquisition, reverse geocoding addresses via OpenStreetMap, and layer switcher (Voyager, Satellite, Street, Topo).
+* Click-anywhere pin-drop to register saplings on-site in the field.
+
+### 4. 🔗 QR Digital Twins & Live Tag Scanner
+* Generates unique, high-resolution QR tokens for every sapling.
+* Built-in camera QR scanner to scan real-world physical tree tags and pull up their digital passport, watering history, and growth logs.
+
+### 5. 🌍 Scientific Environmental Impact Engine
+* Real-time carbon sequestration calculation (kg CO₂/year) based on species biomass, canopy diameter, and age.
+* Real-world equivalents: Gasoline car km offset, full smartphone charges, stormwater gallons filtered, and Oxygen generated (kg O₂/yr).
+
+### 6. 🏆 Community Gamification & Leaderboard
+* Guardian rankings, XP levels, sustained survival rate %, and achievement badges (*"Forest Guardian"*, *"AI Doctor"*, *"Century Planter"*).
+
+### 7. 📖 Botanical Encyclopedia & Care Almanac
+* Searchable and filterable database of indoor plants, urban shade trees, medicinal herbs, and fruit trees with light, water, soil, and pet toxicity profiles.
+
+---
+
+## 🛠️ Technology Stack
+
+* **Frontend Framework:** React 18 + Vite
+* **Styling & Theme:** Tailwind CSS + Vanilla CSS Variables + Custom Glassmorphism System
+* **Icons:** Lucide React + FontAwesome 6
+* **Mapping & GIS:** Leaflet.js + OpenStreetMap Nominatim Geocoding + Esri World Imagery
+* **Data Visualization:** Chart.js + React-Chartjs-2
+* **QR Engine:** QRCode.react + Html5-QRCode
+* **Gamification:** Canvas-Confetti
+* **Data Persistence:** LocalStorage & IndexedDB with JSON/CSV export and import
+
+---
 
 ## 🚀 How to Run Locally
-1.  Clone the repository:
-    ```bash
-    git clone [https://github.com/YOUR_USERNAME/green-track.git](https://github.com/YOUR_USERNAME/green-track.git)
-    ```
-2.  Open `index.html` in your browser.
-3.  **Note:** GPS features require a secure context (HTTPS) or `localhost`.
 
-## 🔮 Future Scope
-* Integration with Polygon Blockchain for "Tree NFTs".
-* IoT Soil Moisture sensors integration.
-* Corporate sponsoring for "Adopting" high-performing trees.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/AyushKhatai/GreenTrack.git
+   cd GreenTrack
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+   Open `http://localhost:3000` in your browser.
+
+4. **Build for Production:**
+   ```bash
+   npm run build
+   ```
 
 ---
 
-Made with 💚 by Ayush Khatai
+## 👨‍💻 Created by
+Made with 💚 by **Ayush Khatai**
