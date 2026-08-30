@@ -83,6 +83,22 @@ export default function TreeGISMap({
     }
   };
 
+  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
+  if (mapboxToken && mapboxToken.trim()) {
+    tileLayers.mapboxSatellite = {
+      name: 'Mapbox Satellite HD',
+      url: `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${mapboxToken.trim()}`,
+      attribution: '&copy; Mapbox &copy; OpenStreetMap',
+      maxZoom: 22
+    };
+    tileLayers.mapboxOutdoors = {
+      name: 'Mapbox Outdoors (Nature)',
+      url: `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${mapboxToken.trim()}`,
+      attribution: '&copy; Mapbox &copy; OpenStreetMap',
+      maxZoom: 22
+    };
+  }
+
   // 1. Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
