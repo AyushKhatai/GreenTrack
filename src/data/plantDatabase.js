@@ -475,7 +475,7 @@ export function searchPlants(query = "", category = "all") {
   const q = query.toLowerCase().trim();
   return PLANT_DATABASE.filter(plant => {
     const matchesCategory = category === "all" || plant.type === category || plant.category.toLowerCase().includes(category.toLowerCase());
-    const matchesQuery = !q || 
+    const matchesQuery = !q ||
       plant.name.toLowerCase().includes(q) ||
       plant.scientificName.toLowerCase().includes(q) ||
       plant.tags.some(t => t.toLowerCase().includes(q)) ||
