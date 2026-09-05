@@ -1,6 +1,7 @@
 // Persistent Storage & Cloud Supabase Data Management Service
 import { INITIAL_TREES } from '../data/initialTrees';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { notifyError, notifyWarning } from '../components/ui';
 
 const STORAGE_KEY = 'greentrack_trees_v2';
 const USER_PROFILE_KEY = 'greentrack_user_profile_v2';
@@ -18,6 +19,7 @@ export function loadTrees() {
       }
     }
   } catch (e) {
+    notifyError("Couldn't read trees from storage — using the demo dataset.", 'Local cache unavailable');
     console.error("Failed to load trees from storage:", e);
   }
   // Initialize with pre-seeded data
@@ -32,6 +34,7 @@ export function saveTrees(trees) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(trees));
   } catch (e) {
+    notifyError("Couldn't write to local storage. Your latest changes may not persist.", 'Save failed');
     console.error("Failed to save trees to storage:", e);
   }
 }
@@ -49,6 +52,7 @@ export async function syncTreesFromCloud() {
       .order('created_at', { ascending: false });
 
     if (error) {
+      notifyWarning("Cloud sync unavailable — using your local cache.", 'Working offline');
       console.warn("Supabase fetch error, using local cache:", error.message);
       return loadTrees();
     }
@@ -89,6 +93,7 @@ export async function syncTreesFromCloud() {
       return formatted;
     }
   } catch (err) {
+    notifyWarning("Cloud sync unavailable — using your local cache.", 'Working offline');
     console.error("Supabase sync error:", err);
   }
 

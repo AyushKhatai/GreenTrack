@@ -1,29 +1,31 @@
-import React, { useState } from 'react';
-import { 
-  Sprout, 
-  TreePine, 
-  MapPin, 
-  BookOpen, 
-  Trophy, 
-  Plus, 
-  QrCode, 
-  Sparkles, 
-  Menu, 
-  X, 
-  Flame,
-  ShieldAlert
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Sprout,
+  TreePine,
+  MapPin,
+  BookOpen,
+  Trophy,
+  Plus,
+  QrCode,
+  Sparkles,
+  Menu,
+  X,
+  Activity
 } from 'lucide-react';
 import { hasGeminiApiKey } from '../services/geminiService';
 import { loadGuilds, getUserGuild } from '../data/guildsData';
+import { VisuallyHidden } from './ui';
 
-export default function Navbar({ 
-  currentTab, 
-  setCurrentTab, 
-  aggregateImpact, 
-  onOpenPlantModal, 
+export default function Navbar({
+  currentTab,
+  setCurrentTab,
+  aggregateImpact,
+  onOpenPlantModal,
   onOpenQRScanner
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const menuButtonRef = useRef(null);
 
   const guilds = loadGuilds();
   const userGuildId = getUserGuild();
@@ -31,11 +33,11 @@ export default function Navbar({
   const isGeminiReady = hasGeminiApiKey();
 
   const navItems = [
-    { id: 'dashboard', label: 'My Forest & Stats', icon: TreePine },
-    { id: 'guilds', label: 'Guilds & Quests', icon: Trophy, badge: 'Clan Clash' },
-    { id: 'doctor', label: 'AI Plant Doctor', icon: Sparkles, badge: isGeminiReady ? 'Gemini AI' : 'Vision' },
-    { id: 'map', label: 'GIS Map Tracker', icon: MapPin },
-    { id: 'encyclopedia', label: 'Plant Directory', icon: BookOpen },
+    { id: 'dashboard', label: 'Forest', icon: TreePine },
+    { id: 'guilds', label: 'Guilds', icon: Trophy },
+    { id: 'doctor', label: 'AI Doctor', icon: Sparkles },
+    { id: 'map', label: 'Map', icon: MapPin },
+    { id: 'encyclopedia', label: 'Encyclopedia', icon: BookOpen },
   ];
 
   const handleNavClick = (tabId) => {
@@ -43,36 +45,40 @@ export default function Navbar({
     setMobileMenuOpen(false);
   };
 
-  return (
-    <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-emerald-500/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          
-          {/* Brand Logo */}
-          <div 
-            onClick={() => handleNavClick('dashboard')}
-            className="flex items-center gap-3 cursor-pointer group"
-          >
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-900/30 group-hover:scale-105 transition-transform">
-              <Sprout className="w-6 h-6 text-slate-950 font-bold" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-black text-xl tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-200 bg-clip-text text-transparent">
-                  GreenTrack
-                </span>
-                <span className="text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  CLANS
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
-                Social Tree Survival & Campus Guilds
-              </p>
-            </div>
-          </div>
+  // Close the mobile menu on Escape and return focus to the trigger.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileMenuOpen]);
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 bg-emerald-950/40 p-1.5 rounded-2xl border border-emerald-500/15">
+  return (
+    <header className="sticky top-0 z-40 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-[#1f1f1f]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14">
+
+          {/* Brand */}
+          <button
+            onClick={() => handleNavClick('dashboard')}
+            className="flex items-center gap-2 group focus-ring rounded-md"
+            aria-label="GreenTrack home"
+          >
+            <div className="w-7 h-7 rounded-md bg-emerald-500 flex items-center justify-center" aria-hidden="true">
+              <Sprout className="w-4 h-4 text-[#052e16]" strokeWidth={2.5} />
+            </div>
+            <span className="font-semibold text-[15px] tracking-tight text-white">
+              GreenTrack
+            </span>
+          </button>
+
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-1" aria-label="Primary">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentTab === item.id;
@@ -80,70 +86,84 @@ export default function Navbar({
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all relative ${
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex items-center gap-1.5 h-8 px-3 rounded-md text-[13px] font-medium transition-colors focus-ring ${
                     isActive
-                      ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
-                      : 'text-slate-300 hover:text-emerald-300 hover:bg-emerald-900/30'
+                      ? 'bg-[#161616] text-white'
+                      : 'text-[#a1a1a1] hover:text-white hover:bg-[#111111]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-emerald-400'}`} />
+                  <Icon className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   <span>{item.label}</span>
-                  {item.badge && !isActive && (
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      {item.badge}
-                    </span>
+                  {item.id === 'doctor' && isGeminiReady && (
+                    <span
+                      className="ml-1 w-1.5 h-1.5 rounded-full bg-emerald-500 dot-pulse"
+                      aria-label="Gemini AI ready"
+                    />
                   )}
                 </button>
               );
             })}
           </nav>
 
-          {/* Action CTAs */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            
-            {/* Active Guild Badge */}
-            <button
-              onClick={() => handleNavClick('guilds')}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-emerald-500/20 text-xs font-bold text-slate-200 hover:border-emerald-400 transition-all"
-              title="Your Active Clan"
+          {/* Right side actions */}
+          <div className="flex items-center gap-2">
+            <div
+              className="hidden lg:flex items-center gap-3 mr-1 px-3 h-8 rounded-md border border-[#1f1f1f] bg-[#111111]"
+              aria-label={`Total CO₂ sequestered: ${aggregateImpact.totalCo2Kg} kilograms`}
             >
-              <span>{activeGuild.avatar}</span>
-              <span className="truncate max-w-[100px] text-emerald-400">{activeGuild.name.split(' ')[0]}</span>
-              <span className="text-[10px] text-amber-400">#{activeGuild.rank}</span>
-            </button>
+              <Activity className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} aria-hidden="true" />
+              <span className="text-[12px] text-[#a1a1a1]">CO₂</span>
+              <span className="text-[12px] font-semibold text-white tabular-nums">
+                {aggregateImpact.totalCo2Kg >= 1000
+                  ? `${(aggregateImpact.totalCo2Kg / 1000).toFixed(2)}t`
+                  : `${Math.round(aggregateImpact.totalCo2Kg)}kg`}
+              </span>
+            </div>
 
-            {/* QR Scanner Quick Button */}
             <button
               onClick={onOpenQRScanner}
-              title="Scan Physical Tree QR Tag"
-              className="p-2.5 rounded-xl bg-slate-900/90 text-emerald-400 border border-emerald-500/20 hover:border-emerald-400 hover:bg-emerald-950/50 transition-all flex items-center gap-1.5 text-xs font-semibold"
+              title="Scan QR"
+              aria-label="Scan QR code"
+              className="hidden sm:inline-flex w-8 h-8 items-center justify-center rounded-md text-[#a1a1a1] hover:text-white hover:bg-[#111111] border border-[#1f1f1f] focus-ring"
             >
-              <QrCode className="w-4 h-4" />
+              <QrCode className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             </button>
 
-            {/* Plant New Sapling Button */}
             <button
               onClick={onOpenPlantModal}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/25 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="btn btn-primary h-8 px-3 text-[13px] focus-ring"
+              aria-label="Plant a new tree"
             >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span className="hidden sm:inline">Plant Tree</span>
+              <Plus className="w-3.5 h-3.5" strokeWidth={2.5} aria-hidden="true" />
+              <span className="hidden sm:inline">Plant tree</span>
+              <VisuallyHidden className="sm:hidden">Plant a new tree</VisuallyHidden>
             </button>
 
-            {/* Mobile menu toggle */}
             <button
+              ref={menuButtonRef}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-slate-300 hover:text-emerald-400 bg-slate-900 border border-slate-800"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="primary-mobile-menu"
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              className="md:hidden w-8 h-8 inline-flex items-center justify-center rounded-md text-[#a1a1a1] hover:text-white hover:bg-[#111111] border border-[#1f1f1f] focus-ring"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen
+                ? <X className="w-4 h-4" aria-hidden="true" />
+                : <Menu className="w-4 h-4" aria-hidden="true" />}
             </button>
           </div>
-
         </div>
 
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden py-3 border-t border-emerald-500/20 grid grid-cols-2 gap-2 animate-enter">
+        {/* Mobile menu */}
+        <div
+          id="primary-mobile-menu"
+          ref={menuRef}
+          className={`md:hidden ${mobileMenuOpen ? 'block' : 'hidden'} pb-3 pt-2 border-t border-[#1f1f1f] mt-1`}
+          role="menu"
+          aria-label="Primary"
+        >
+          <div className="grid grid-cols-2 gap-1 animate-enter">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentTab === item.id;
@@ -151,19 +171,21 @@ export default function Navbar({
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  className={`flex items-center gap-2 p-3 rounded-xl text-xs font-semibold ${
+                  role="menuitem"
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex items-center gap-2 h-9 px-3 rounded-md text-[13px] font-medium focus-ring ${
                     isActive
-                      ? 'bg-emerald-500 text-slate-950 font-bold'
-                      : 'bg-slate-900/90 text-slate-300 hover:bg-emerald-900/30'
+                      ? 'bg-[#161616] text-white'
+                      : 'text-[#a1a1a1] hover:text-white hover:bg-[#111111]'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>{item.label}</span>
                 </button>
               );
             })}
           </div>
-        )}
+        </div>
       </div>
     </header>
   );

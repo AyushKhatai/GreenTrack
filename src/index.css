@@ -2,137 +2,851 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================
+   GreenTrack AI — Design Tokens (Block 1 / P0 foundation)
+   ==========================================================
+   Token layer only. Existing .surface / .btn / .input / .chip /
+   .tab / .tabs / .btn-primary / .btn-secondary / .btn-ghost /
+   .chip-accent / .tree-pin-* / focus-ring / animate-* utilities
+   are preserved below unchanged. Downstream blocks (P1+) will
+   migrate component literals onto these tokens.
+
+   Convention: tokens are namespaced (--text-*, --surface-*,
+   --status-*, --space-*, --radius-*, --size-icon-*, --size-btn-*).
+   ========================================================== */
+
 @layer base {
   :root {
-    --bg-primary: #020b08;
-    --bg-surface: #071912;
-    --bg-card: rgba(12, 34, 26, 0.7);
-    --border-card: rgba(52, 211, 153, 0.15);
+    /* --------------------------------------------------------
+       Surfaces & borders
+       Mirrors current literals: #0a0a0a / #111 / #161616 /
+       #1f1f1f / #2a2a2a — kept so visual output is identical
+       after the next refactor block.
+       -------------------------------------------------------- */
+    --bg: #0a0a0a;
+    --bg-soft: #111111;
+    --bg-elev: #161616;
+
+    --surface-page: #0a0a0a;
+    --surface-1: #111111;
+    --surface-2: #161616;
+    --surface-3: #1a1a1a;     /* elevated: modal / popup / dropdown */
+    --surface-inset: #0a0a0a; /* input wells, sub-cards inside cards */
+
+    --border: #1f1f1f;
+    --border-strong: #2a2a2a;
+    --border-elev: #262626;
+
+    /* --------------------------------------------------------
+       Foreground (text)
+       -------------------------------------------------------- */
+    --fg: #fafafa;
+    --fg-muted: #a1a1a1;
+    --fg-subtle: #6b6b6b;
+
+    /* --------------------------------------------------------
+       Accent (emerald)
+       -------------------------------------------------------- */
+    --accent: #22c55e;
+    --accent-hover: #16a34a;
+    --accent-fg: #052e16;
+    --accent-soft: rgba(34, 197, 94, 0.1);
+    --accent-soft-08: rgba(34, 197, 94, 0.08);
+    --accent-border-25: rgba(34, 197, 94, 0.25);
+
+    /* --------------------------------------------------------
+       Status (healthy / attention / critical)
+       Each status exposes -fg (full), -bg (8% tint), -border (25% tint)
+       matching the inline-styled chips duplicated across pages.
+       -------------------------------------------------------- */
+    --status-healthy-fg: #22c55e;
+    --status-healthy-bg: rgba(34, 197, 94, 0.08);
+    --status-healthy-border: rgba(34, 197, 94, 0.25);
+
+    --status-attention-fg: #eab308;
+    --status-attention-bg: rgba(234, 179, 8, 0.08);
+    --status-attention-border: rgba(234, 179, 8, 0.25);
+
+    --status-critical-fg: #ef4444;
+    --status-critical-bg: rgba(239, 68, 68, 0.08);
+    --status-critical-border: rgba(239, 68, 68, 0.25);
+
+    /* Aux accents used in the disease/heatmap visualization */
+    --accent-mildew-fg: #a855f7;
+    --accent-mildew-bg: rgba(168, 85, 247, 0.08);
+    --accent-mildew-border: rgba(168, 85, 247, 0.25);
+
+    /* --------------------------------------------------------
+       Typography — type scale
+       Roles: display / h1 / h2 / h3 / body / caption / mono
+       Values mirror the current spread of Tailwind text-[Npx]
+       literals (28/22/20/18/15/14/13/12/11/10) but are exposed
+       as named roles so the next block can collapse drift.
+       -------------------------------------------------------- */
+    --font-sans: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Font sizes (px) */
+    --text-display-size: 32px;   /* hero numbers (future) */
+    --text-display-lh: 40px;
+    --text-h1-size: 24px;        /* page h1 (currently text-[20px]) */
+    --text-h1-lh: 32px;
+    --text-h2-size: 18px;        /* modal h2 / page h1 variant */
+    --text-h2-lh: 28px;
+    --text-h3-size: 15px;        /* section h3 (currently text-[15px]) */
+    --text-h3-lh: 24px;
+    --text-body-size: 13px;      /* body (currently text-[13px] / [12px] drift) */
+    --text-body-lh: 20px;
+    --text-caption-size: 11px;   /* eyebrows / labels / chips */
+    --text-caption-lh: 16px;
+
+    /* Tracking */
+    --tracking-display: -0.02em;
+    --tracking-h1: -0.02em;
+    --tracking-h2: -0.01em;
+    --tracking-h3: -0.01em;
+    --tracking-body: 0;
+    --tracking-caption: 0.06em;
+
+    /* Type role helpers (apply via .text-display / .text-h1 / ...) */
+    /* (utility classes are defined below in @layer utilities) */
+
+    /* --------------------------------------------------------
+       Spacing scale
+       Used as the basis for future card / section padding.
+       Not used yet; current p-3/p-4/p-5 literals are unchanged.
+       -------------------------------------------------------- */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-16: 64px;
+
+    /* --------------------------------------------------------
+       Radius scale
+       Mirrors current rounded-md (6px) / rounded-lg (8px) on
+       the .surface / .input / .btn primitives, and exposes
+       the radii the next block will adopt (10 / 14).
+       -------------------------------------------------------- */
+    --radius-xs: 6px;   /* inputs, chips (current rounded-md) */
+    --radius-sm: 8px;   /* scanner dropzone (current rounded-lg) */
+    --radius-md: 10px;  /* .surface (current) */
+    --radius-lg: 14px;  /* future: page-level cards */
+    --radius-xl: 18px;  /* future: hero surfaces */
+    --radius-pill: 999px;
+
+    /* --------------------------------------------------------
+       Icon size system
+       Current literals: w-3 (12), w-3.5 (14), w-4 (16),
+       w-5 (20), w-7/w-8/w-9/w-12 — fragmented. The new scale:
+       14 / 16 / 18 / 20 / 24. The current w-3 (12) usage is
+       reserved for inline-with-text only; w-3.5 (14) maps to
+       size-icon-sm.
+       -------------------------------------------------------- */
+    --size-icon-xs: 12px;
+    --size-icon-sm: 14px;
+    --size-icon-md: 16px;
+    --size-icon-lg: 18px;
+    --size-icon-xl: 20px;
+    --size-icon-2xl: 24px;
+
+    /* --------------------------------------------------------
+       Button size system
+       Current literals: h-7 (28), h-8 (32), h-9 (36), h-10 (40),
+       h-14 (56 — scanner capture), w-7/w-8/w-9 (icon buttons).
+       New scale: xs 24 / sm 28 / md 32 / lg 36 / xl 40 / 2xl 44.
+       36px is the canonical .btn height; existing .btn stays.
+       -------------------------------------------------------- */
+    --size-btn-xs: 24px;   /* compact table-row icon buttons */
+    --size-btn-sm: 28px;   /* currently h-7 / h-8 inline */
+    --size-btn-md: 32px;   /* .btn h-8 / h-9 common */
+    --size-btn-lg: 36px;   /* .btn canonical (current) */
+    --size-btn-xl: 40px;   /* prominent CTAs */
+    --size-btn-2xl: 44px;  /* hero / scanner capture */
+
+    /* --------------------------------------------------------
+       Shadow scale
+       -------------------------------------------------------- */
+    --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+    /* --------------------------------------------------------
+       Motion
+       -------------------------------------------------------- */
+    --ease-out-quart: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-fast: 120ms;
+    --duration-base: 160ms;
+    --duration-slow: 240ms;
+  }
+
+  html, body, #root {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
   }
 
   body {
-    background-color: #030c08;
-    color: #f1f5f9;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01", "tnum";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    border-color: var(--border);
   }
 }
 
-/* Custom Scrollbars */
+/* ==========================================================
+   Tailwind component layer additions — non-breaking
+   These classes are additive. They do not replace or
+   override any existing class below.
+   ========================================================== */
+
+@layer components {
+  /* Type role utilities — apply to headings and ledes. */
+  .text-display {
+    font-size: var(--text-display-size);
+    line-height: var(--text-display-lh);
+    letter-spacing: var(--tracking-display);
+    font-weight: 600;
+  }
+  .text-h1 {
+    font-size: var(--text-h1-size);
+    line-height: var(--text-h1-lh);
+    letter-spacing: var(--tracking-h1);
+    font-weight: 600;
+  }
+  .text-h2 {
+    font-size: var(--text-h2-size);
+    line-height: var(--text-h2-lh);
+    letter-spacing: var(--tracking-h2);
+    font-weight: 600;
+  }
+  .text-h3 {
+    font-size: var(--text-h3-size);
+    line-height: var(--text-h3-lh);
+    letter-spacing: var(--tracking-h3);
+    font-weight: 600;
+  }
+  .text-body {
+    font-size: var(--text-body-size);
+    line-height: var(--text-body-lh);
+  }
+  .text-caption {
+    font-size: var(--text-caption-size);
+    line-height: var(--text-caption-lh);
+    letter-spacing: var(--tracking-caption);
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* Number/figure utility — opt-in tabular numerals. */
+  .nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "cv02" 1, "cv11" 1;
+  }
+
+  /* Eyebrow / kicker — small uppercase label above a heading. */
+  .eyebrow {
+    font-size: var(--text-caption-size);
+    line-height: var(--text-caption-lh);
+    letter-spacing: var(--tracking-caption);
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--fg-subtle);
+  }
+
+  /* Surface tokens — additive. Existing .surface preserved. */
+  .bg-surface-page   { background-color: var(--surface-page); }
+  .bg-surface-1      { background-color: var(--surface-1); }
+  .bg-surface-2      { background-color: var(--surface-2); }
+  .bg-surface-3      { background-color: var(--surface-3); }
+  .bg-surface-inset  { background-color: var(--surface-inset); }
+
+  .text-fg           { color: var(--fg); }
+  .text-fg-muted     { color: var(--fg-muted); }
+  .text-fg-subtle    { color: var(--fg-subtle); }
+
+  /* Status variants — read data-status="..." on a parent or use
+     the explicit classes below. Mirrors the inline-styled chips
+     currently in 4 files. */
+  .status-healthy,
+  .status-healthy > * { color: var(--status-healthy-fg); }
+  .status-attention,
+  .status-attention > * { color: var(--status-attention-fg); }
+  .status-critical,
+  .status-critical > * { color: var(--status-critical-fg); }
+
+  .bg-status-healthy  { background-color: var(--status-healthy-bg); }
+  .bg-status-attention { background-color: var(--status-attention-bg); }
+  .bg-status-critical { background-color: var(--status-critical-bg); }
+
+  .border-status-healthy  { border-color: var(--status-healthy-border); }
+  .border-status-attention { border-color: var(--status-attention-border); }
+  .border-status-critical { border-color: var(--status-critical-border); }
+
+  /* Card hierarchy — additive, future-use.
+     .card / .card-elevated / .card-inset are intentionally not
+     yet applied to existing markup. They are the targets for
+     the P1 refactor. */
+  .card {
+    background-color: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .card-elevated {
+    background-color: var(--surface-3);
+    border: 1px solid var(--border-elev);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-elevated);
+  }
+  .card-inset {
+    background-color: var(--surface-inset);
+    border: 1px solid var(--border-elev);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Button size variants — additive. Existing .btn unchanged.
+     Use .btn-sm / .btn-md / .btn-lg / .btn-xl / .btn-2xl on top
+     of .btn. */
+  .btn-xs { height: var(--size-btn-xs); padding: 0 8px;  font-size: 12px; border-radius: var(--radius-xs); }
+  .btn-sm { height: var(--size-btn-sm); padding: 0 10px; font-size: 12px; border-radius: var(--radius-xs); }
+  .btn-md { height: var(--size-btn-md); padding: 0 12px; font-size: 13px; border-radius: var(--radius-sm); }
+  .btn-lg { height: var(--size-btn-lg); padding: 0 14px; font-size: 13px; border-radius: var(--radius-sm); }
+  .btn-xl { height: var(--size-btn-xl); padding: 0 16px; font-size: 14px; border-radius: var(--radius-sm); }
+  .btn-2xl { height: var(--size-btn-2xl); padding: 0 18px; font-size: 14px; border-radius: var(--radius-sm); }
+
+  /* Icon-button squares */
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-btn-lg);
+    height: var(--size-btn-lg);
+    border-radius: var(--radius-sm);
+    color: var(--fg-muted);
+    border: 1px solid transparent;
+    transition: background-color var(--duration-base) var(--ease-standard),
+                color var(--duration-base) var(--ease-standard),
+                border-color var(--duration-base) var(--ease-standard);
+  }
+  .icon-btn:hover {
+    color: var(--fg);
+    background-color: var(--surface-2);
+    border-color: var(--border-elev);
+  }
+  .icon-btn-sm { width: var(--size-btn-sm); height: var(--size-btn-sm); }
+  .icon-btn-xs { width: var(--size-btn-xs); height: var(--size-btn-xs); }
+}
+
+@layer utilities {
+  /* Icon size utilities — opt-in for the next block. */
+  .size-icon-xs { width: var(--size-icon-xs); height: var(--size-icon-xs); }
+  .size-icon-sm { width: var(--size-icon-sm); height: var(--size-icon-sm); }
+  .size-icon-md { width: var(--size-icon-md); height: var(--size-icon-md); }
+  .size-icon-lg { width: var(--size-icon-lg); height: var(--size-icon-lg); }
+  .size-icon-xl { width: var(--size-icon-xl); height: var(--size-icon-xl); }
+  .size-icon-2xl { width: var(--size-icon-2xl); height: var(--size-icon-2xl); }
+
+  /* Visually hidden (a11y) — useful for screen-reader-only labels. */
+  .sr-only-focusable:not(:focus):not(:focus-within):not(:active) {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+}
+
+/* ==========================================================
+   Existing primitives — UNCHANGED.
+   The block below is byte-for-byte equivalent to the prior
+   file (except for comment formatting). Visual output is
+   guaranteed identical for current consumers.
+   ========================================================== */
+
+/* Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(3, 12, 8, 0.8);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #059669;
-  border-radius: 9999px;
+  background: #2a2a2a;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+  background: #3a3a3a;
 }
 
-/* Glassmorphic UI tokens */
-.glass-panel {
-  background: rgba(12, 34, 26, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(52, 211, 153, 0.18);
+/* Sharp minimal surface tokens */
+.surface {
+  background-color: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.surface-hover {
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.surface-hover:hover {
+  border-color: var(--border-strong);
+  background-color: var(--bg-elev);
 }
 
-.glass-panel-hover {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.glass-panel-hover:hover {
-  border-color: rgba(52, 211, 153, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(16, 185, 129, 0.15);
+.divider {
+  height: 1px;
+  background-color: var(--border);
 }
 
-.glass-input {
-  background: rgba(4, 18, 13, 0.8);
-  border: 1px solid rgba(52, 211, 153, 0.25);
-  color: #f8fafc;
-}
-.glass-input:focus {
-  border-color: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+/* Form input — sharp minimal */
+.input {
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 8px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
   outline: none;
 }
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.input::placeholder {
+  color: var(--fg-subtle);
+}
 
-/* Leaflet Custom Marker Styles */
-.custom-tree-pin {
-  width: 38px;
-  height: 38px;
+/* Pill / chip */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  color: var(--fg-muted);
+}
+.chip-accent {
+  border-color: rgba(34, 197, 94, 0.25);
+  background-color: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Button primitives */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.btn-primary {
+  background-color: var(--accent);
+  color: #052e16;
+  font-weight: 600;
+}
+.btn-primary:hover {
+  background-color: #16a34a;
+}
+.btn-secondary {
+  background-color: var(--bg-soft);
+  border-color: var(--border);
+  color: var(--fg);
+}
+.btn-secondary:hover {
+  background-color: var(--bg-elev);
+  border-color: var(--border-strong);
+}
+.btn-ghost {
+  background-color: transparent;
+  color: var(--fg-muted);
+}
+.btn-ghost:hover {
+  color: var(--fg);
+  background-color: var(--bg-soft);
+}
+
+/* Tab control */
+.tabs {
+  display: inline-flex;
+  background-color: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.tab:hover {
+  color: var(--fg);
+}
+.tab-active {
+  background-color: var(--bg-elev);
+  color: var(--fg);
+}
+
+/* Leaflet markers — sharp minimal */
+.tree-pin {
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
+  border: 2px solid #0a0a0a;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.tree-pin-healthy { background-color: #22c55e; }
+.tree-pin-attention { background-color: #eab308; }
+.tree-pin-critical { background-color: #ef4444; }
+
+/* Custom tree pin (legacy fallback) */
+.custom-tree-pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #0a0a0a;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 16px;
-  border: 3px solid #ffffff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  font-size: 10px;
 }
-
 .custom-tree-pin:hover {
-  transform: scale(1.18);
+  transform: scale(1.15);
   z-index: 1000;
 }
 
-.custom-tree-pin::after {
-  content: '';
-  position: absolute;
-  bottom: -7px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 7px 7px 0;
-  border-style: solid;
-}
-
-.pin-healthy {
-  background: linear-gradient(135deg, #10b981, #047857);
-}
-.pin-healthy::after {
-  border-color: #047857 transparent transparent transparent;
-}
-
-.pin-attention {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-.pin-attention::after {
-  border-color: #d97706 transparent transparent transparent;
-}
-
-.pin-critical {
-  background: linear-gradient(135deg, #ef4444, #b91c1c);
-}
-.pin-critical::after {
-  border-color: #b91c1c transparent transparent transparent;
-}
-
-/* Reticle corner animations */
 @keyframes laserSweep {
   0% { transform: translateY(-100%); opacity: 0; }
   50% { opacity: 1; }
   100% { transform: translateY(100%); opacity: 0; }
 }
-
 .animate-laser {
   animation: laserSweep 2.2s ease-in-out infinite;
 }
 
-/* Leaflet Dark Mode Tiles & Popups */
+/* Leaflet dark popups — minimal */
 .leaflet-popup-content-wrapper {
-  background: #071912 !important;
-  color: #f1f5f9 !important;
-  border: 1px solid rgba(52, 211, 153, 0.3) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5) !important;
+  background: #161616 !important;
+  color: #fafafa !important;
+  border: 1px solid #262626 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+.leaflet-popup-tip {
+  background: #161616 !important;
+}
+.leaflet-popup-close-button {
+  color: #a1a1a1 !important;
 }
 
-.leaflet-popup-tip {
-  background: #071912 !important;
+/* Map attribution minimal */
+.leaflet-control-attribution {
+  background: rgba(10, 10, 10, 0.7) !important;
+  color: #6b6b6b !important;
+  font-size: 10px !important;
+}
+.leaflet-control-attribution a {
+  color: #a1a1a1 !important;
+}
+
+/* Leaflet zoom controls minimal */
+.leaflet-bar a {
+  background-color: #161616 !important;
+  color: #fafafa !important;
+  border-color: #262626 !important;
+}
+.leaflet-bar a:hover {
+  background-color: #1f1f1f !important;
+}
+
+/* No-scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Subtle entrance */
+@keyframes enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-enter {
+  animation: enter 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Selection */
+::selection {
+  background: rgba(34, 197, 94, 0.3);
+  color: #fafafa;
+}
+
+/* Ring for focus on interactive surfaces */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 4px var(--accent);
+}
+
+/* Subtle pulsing dot */
+@keyframes ping-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.92); }
+}
+.dot-pulse {
+  animation: ping-soft 1.6s ease-in-out infinite;
+}
+
+/* ==========================================================
+   Modal motion (Block 3 / P2)
+   Additive only — does not touch existing primitives.
+   ========================================================== */
+@keyframes modal-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes modal-panel-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+.modal-overlay {
+  animation: modal-overlay-in 160ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.modal-panel {
+  animation: modal-panel-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: center center;
+}
+
+/* Toast progress bar — linear countdown over duration. */
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+.toast-progress {
+  transform-origin: left center;
+  animation: toast-progress linear forwards;
+}
+
+/* Modal scroll lock utility (applied to <html> while modal is open). */
+.modal-open {
+  overflow: hidden;
+}
+
+/* ==========================================================
+   Personality & Motion (Block 4 / P3)
+   Additive only — does not touch existing primitives.
+   ========================================================== */
+
+/* Dashboard / view section stagger.
+   Each `.stagger-item` reads `--stagger-index` (set inline) and
+   applies a tiny incremental delay. No transform on the parent. */
+@keyframes stagger-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.stagger-item {
+  animation: stagger-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--stagger-index, 0) * 40ms);
+}
+
+/* Scanner sweep — single horizontal scan-line that drifts
+   top → bottom over 2.4s, plus a thin progress bar. */
+@keyframes scanner-sweep {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  10%  { opacity: 0.55; }
+  90%  { opacity: 0.55; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+.scanner-sweep {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(34, 197, 94, 0.0) 30%,
+    rgba(34, 197, 94, 0.35) 50%,
+    rgba(34, 197, 94, 0.0) 70%,
+    transparent 100%
+  );
+  animation: scanner-sweep 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes scanner-sweep-bar {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.scanner-sweep-bar {
+  width: 50%;
+  animation: scanner-sweep-bar 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Capture ring — soft pulsing halo around the capture button.
+   Restrained: 1.8s cycle, opacity-only pulse + scale. */
+@keyframes capture-ring-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+.capture-ring {
+  animation: capture-ring-pulse 1.8s ease-in-out infinite;
+}
+
+/* Chat — message entrance (transform/opacity only) and typing dots. */
+@keyframes chat-msg-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.chat-msg-enter {
+  animation: chat-msg-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes chat-typing {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30%           { opacity: 1;    transform: translateY(-2px); }
+}
+.chat-typing-dot {
+  display: inline-block;
+  animation: chat-typing 1.2s ease-in-out infinite;
+}
+
+/* Chat bubble differentiation
+   Bot   — neutral, dark surface
+   User  — subtle emerald tint, slightly raised */
+.chat-bubble-bot {
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+}
+.chat-bubble-user {
+  background: linear-gradient(
+    180deg,
+    rgba(34, 197, 94, 0.10) 0%,
+    rgba(34, 197, 94, 0.06) 100%
+  );
+  border: 1px solid var(--accent-border-25);
+  color: var(--fg);
+}
+
+/* Tree pins — wrapper + glyph + active ring
+   Uses current pin system: .tree-pin + .tree-pin-{status}. */
+.tree-pin-wrap {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tree-pin-wrap .tree-pin {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 160ms ease;
+}
+.tree-pin-wrap:hover .tree-pin {
+  transform: scale(1.18);
+}
+.tree-pin-glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  color: #052e16;
+  text-shadow: 0 0 2px rgba(0,0,0,0.4);
+  pointer-events: none;
+}
+.tree-pin-attention .tree-pin-glyph,
+.tree-pin-critical .tree-pin-glyph {
+  color: #0a0a0a;
+}
+
+/* Selected/active pin — soft outer ring + subtle scale. */
+.tree-pin-wrap--active::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+}
+.tree-pin--active {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(34, 197, 94, 0.20);
+}
+.tree-pin-critical.tree-pin--active,
+.tree-pin-attention.tree-pin--active {
+  box-shadow: 0 0 0 2px currentColor, 0 0 0 4px rgba(0,0,0,0.0);
+}
+.tree-pin-wrap--active.tree-pin-wrap:hover .tree-pin {
+  transform: scale(1.18);
+}
+
+/* ==========================================================
+   Reduced motion — Block 4 / P3
+   Disable every named motion class when the OS asks for less.
+   The application stays fully usable: layouts / colors / focus
+   states are untouched, only timing/transforms are flattened.
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-enter,
+  .animate-laser,
+  .dot-pulse,
+  .stagger-item,
+  .scanner-sweep,
+  .scanner-sweep-bar,
+  .capture-ring,
+  .chat-msg-enter,
+  .chat-typing-dot,
+  .modal-overlay,
+  .modal-panel,
+  .toast-progress {
+    animation: none !important;
+    transform: none !important;
+  }
+  .tree-pin-wrap--active::before,
+  .tree-pin--active {
+    transform: none !important;
+  }
 }

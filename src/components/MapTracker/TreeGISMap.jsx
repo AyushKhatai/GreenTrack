@@ -1,25 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { 
-  MapPin, 
-  Layers, 
-  Crosshair, 
-  Plus, 
-  Eye, 
-  Sparkles, 
-  ShieldCheck, 
-  AlertTriangle, 
+import {
+  MapPin,
+  Layers,
+  Crosshair,
+  Plus,
+  Sparkles,
   Search,
-  Trees,
   Loader2,
   CheckCircle2,
   Navigation
 } from 'lucide-react';
+import { StatusBadge, useToast, EmptyState } from '../ui';
 
-export default function TreeGISMap({ 
-  trees = [], 
-  onSelectTree, 
-  onOpenPlantModalWithCoords 
+export default function TreeGISMap({
+  trees = [],
+  onSelectTree,
+  onOpenPlantModalWithCoords
 }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -32,52 +29,54 @@ export default function TreeGISMap({
   const [searchQuery, setSearchQuery] = useState('');
   const [tileMenuOpen, setTileMenuOpen] = useState(false);
 
-  // Live Location Search State
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeTreeId, setActiveTreeId] = useState(null);
   const searchTimeoutRef = useRef(null);
+
+  const { toast } = useToast();
 
   const tileLayers = {
     dark: {
-      name: 'Dark Matter (Night)',
+      name: 'Dark',
       url: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
       subdomains: 'abcd',
       maxZoom: 19
     },
     voyager: {
-      name: 'Voyager (Color)',
+      name: 'Voyager',
       url: 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
       subdomains: 'abcd',
       maxZoom: 19
     },
     satellite: {
-      name: 'ArcGIS Satellite HD',
+      name: 'Satellite',
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       attribution: '&copy; Esri &copy; USGS, NOAA',
       subdomains: 'abc',
       maxZoom: 19
     },
     street: {
-      name: 'OpenStreetMap Standard',
+      name: 'Standard',
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      attribution: '&copy; OpenStreetMap',
       subdomains: 'abc',
       maxZoom: 19
     },
     light: {
-      name: 'Positron (Light)',
+      name: 'Light',
       url: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
       subdomains: 'abcd',
       maxZoom: 19
     },
     topo: {
-      name: 'OpenTopo (Terrain)',
+      name: 'Terrain',
       url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-      attribution: '&copy; OpenTopoMap contributors',
+      attribution: '&copy; OpenTopoMap',
       subdomains: 'abc',
       maxZoom: 17
     }
@@ -86,20 +85,19 @@ export default function TreeGISMap({
   const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
   if (mapboxToken && mapboxToken.trim()) {
     tileLayers.mapboxSatellite = {
-      name: 'Mapbox Satellite HD',
+      name: 'Mapbox Sat',
       url: `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${mapboxToken.trim()}`,
       attribution: '&copy; Mapbox &copy; OpenStreetMap',
       maxZoom: 22
     };
     tileLayers.mapboxOutdoors = {
-      name: 'Mapbox Outdoors (Nature)',
+      name: 'Mapbox Nature',
       url: `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${mapboxToken.trim()}`,
       attribution: '&copy; Mapbox &copy; OpenStreetMap',
       maxZoom: 22
     };
   }
 
-  // 1. Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -109,7 +107,7 @@ export default function TreeGISMap({
     }
 
     const map = L.map(mapContainerRef.current, {
-      center: [13.0827, 80.2707], // Default center (Chennai / India corridor)
+      center: [13.0827, 80.2707],
       zoom: 5,
       zoomControl: false
     });
@@ -125,17 +123,16 @@ export default function TreeGISMap({
 
     tileLayerInstanceRef.current = tileLayer;
 
-    // Handle map click to drop planting pin
     map.on('click', async (e) => {
       const { lat, lng } = e.latlng;
       const popup = L.popup()
         .setLatLng([lat, lng])
         .setContent(`
-          <div style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 6px; text-align: center; min-width: 170px;">
-            <div style="font-size: 11px; color: #10b981; font-weight: 800; margin-bottom: 2px;">📍 GPS COORDINATES</div>
-            <div style="font-size: 12px; color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E</div>
-            <button id="plant-here-btn" style="background: #10b981; color: #020b08; border: none; font-weight: 800; font-size: 11px; padding: 7px 12px; border-radius: 8px; cursor: pointer; width: 100%;">
-              🌱 Plant Sapling Here
+          <div style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 8px; min-width: 180px;">
+            <div style="font-size: 10px; color: #6b6b6b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Coordinates</div>
+            <div style="font-size: 12px; color: #fafafa; font-weight: 500; margin-bottom: 8px;">${lat.toFixed(4)}°, ${lng.toFixed(4)}°</div>
+            <button id="plant-here-btn" title="Plant a sapling at these coordinates" aria-label="Plant sapling at these coordinates" style="background: #22c55e; color: #052e16; border: none; font-weight: 600; font-size: 12px; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%;">
+              Plant sapling here
             </button>
           </div>
         `)
@@ -154,20 +151,9 @@ export default function TreeGISMap({
 
     mapInstanceRef.current = map;
 
-    // Invalidate size after layout mounts
-    setTimeout(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize();
-      }
-    }, 200);
+    setTimeout(() => { mapInstanceRef.current?.invalidateSize(); }, 200);
+    setTimeout(() => { mapInstanceRef.current?.invalidateSize(); }, 600);
 
-    setTimeout(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize();
-      }
-    }, 600);
-
-    // Watch resize
     const resizeObserver = new ResizeObserver(() => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
@@ -186,11 +172,10 @@ export default function TreeGISMap({
     };
   }, []);
 
-  // 2. Update Tile Layer on Theme Change
   useEffect(() => {
     if (!mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
-    
+
     if (tileLayerInstanceRef.current) {
       map.removeLayer(tileLayerInstanceRef.current);
     }
@@ -205,18 +190,16 @@ export default function TreeGISMap({
     tileLayerInstanceRef.current = newTileLayer;
   }, [activeTileLayer]);
 
-  // 3. Update Markers when trees or filters change
   useEffect(() => {
     if (!mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
 
-    // Clear existing markers
     markersRef.current.forEach(m => map.removeLayer(m));
     markersRef.current = [];
 
     const filtered = trees.filter(tree => {
       const matchStatus = selectedStatusFilter === 'all' || tree.status === selectedStatusFilter;
-      const matchQuery = !searchQuery || 
+      const matchQuery = !searchQuery ||
         tree.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         tree.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
         tree.planter.toLowerCase().includes(searchQuery.toLowerCase());
@@ -228,54 +211,62 @@ export default function TreeGISMap({
     filtered.forEach(tree => {
       if (!tree.lat || !tree.lng) return;
 
-      let pinClass = "pin-healthy";
-      let iconHtml = '<i class="fa-solid fa-tree"></i>';
+      let pinClass = "tree-pin-healthy";
+      let glyph = "";
+      let statusLabel = tree.status;
 
       if (tree.status === "Needs Attention") {
-        pinClass = "pin-attention";
-        iconHtml = '<i class="fa-solid fa-triangle-exclamation"></i>';
+        pinClass = "tree-pin-attention";
+        glyph = "!";
       } else if (tree.status === "Critical") {
-        pinClass = "pin-critical";
-        iconHtml = '<i class="fa-solid fa-skull"></i>';
+        pinClass = "tree-pin-critical";
+        glyph = "×";
       }
+
+      const isActive = activeTreeId === tree.id;
+      const wrapperClass = `tree-pin-wrap${isActive ? ' tree-pin-wrap--active' : ''}`;
 
       const customIcon = L.divIcon({
         className: 'bg-transparent',
-        html: `<div class="custom-tree-pin ${pinClass}">${iconHtml}</div>`,
-        iconSize: [38, 38],
-        iconAnchor: [19, 38],
-        popupAnchor: [0, -38]
+        html: `<div class="${wrapperClass}"><div class="tree-pin ${pinClass}${isActive ? ' tree-pin--active' : ''}"><span class="tree-pin-glyph">${glyph}</span></div></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+        popupAnchor: [0, -8]
       });
 
       const marker = L.marker([tree.lat, tree.lng], { icon: customIcon }).addTo(map);
 
       marker.bindPopup(`
-        <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 220px; padding: 2px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-            <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: ${
-              tree.status === 'Healthy' ? '#10b981' : tree.status === 'Needs Attention' ? '#f59e0b' : '#ef4444'
-            };">${tree.status}</span>
-            <span style="font-size: 10px; color: #94a3b8;">${tree.healthScore || 90}% Score</span>
+        <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 220px; padding: 4px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <span style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: ${
+              tree.status === 'Healthy' ? '#22c55e' : tree.status === 'Needs Attention' ? '#eab308' : '#ef4444'
+            }; letter-spacing: 0.04em;">${statusLabel}</span>
+            <span style="font-size: 10px; color: #6b6b6b;">${tree.healthScore || 90}%</span>
           </div>
-          <div style="font-size: 14px; font-weight: 800; color: #ffffff; margin-bottom: 2px;">${tree.name}</div>
-          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px; font-style: italic;">${tree.speciesName || "Native Tree"}</div>
-          <div style="font-size: 11px; color: #cbd5e1; margin-bottom: 8px;">📍 ${tree.address}</div>
-          <div style="display: flex; gap: 4px; font-size: 10px; color: #6ee7b7; margin-bottom: 10px; background: rgba(16,185,129,0.1); padding: 4px 8px; border-radius: 6px;">
-            <span>🌳 Planter: <b>${tree.planter}</b></span>
-            <span>•</span>
-            <span>CO₂: <b>${tree.co2OffsetKg || 12}kg</b></span>
+          <div style="font-size: 14px; font-weight: 600; color: #fafafa; margin-bottom: 2px;">${tree.name}</div>
+          <div style="font-size: 11px; color: #6b6b6b; margin-bottom: 6px; font-style: italic;">${tree.speciesName || "Native Tree"}</div>
+          <div style="font-size: 11px; color: #a1a1a1; margin-bottom: 8px;">📍 ${tree.address}</div>
+          <div style="display: flex; gap: 4px; font-size: 10px; color: #a1a1a1; margin-bottom: 10px; background: #161616; padding: 6px 8px; border-radius: 6px; border: 1px solid #262626;">
+            <span>${tree.planter}</span>
+            <span style="color: #6b6b6b;">·</span>
+            <span>${tree.co2OffsetKg || 12} kg CO₂</span>
           </div>
-          <button id="view-tree-btn-${tree.id}" style="width: 100%; background: #10b981; color: #020b08; border: none; font-weight: 800; font-size: 11px; padding: 7px; border-radius: 8px; cursor: pointer;">
-            🌿 Open Digital Twin Passport
+          <button id="view-tree-btn-${tree.id}" title="Open ${tree.name} passport" aria-label="Open ${tree.name} passport" style="width: 100%; background: #22c55e; color: #052e16; border: none; font-weight: 600; font-size: 12px; padding: 8px; border-radius: 6px; cursor: pointer;">
+            Open passport
           </button>
         </div>
       `);
 
       marker.on('popupopen', () => {
+        setActiveTreeId(tree.id);
         const btn = document.getElementById(`view-tree-btn-${tree.id}`);
         if (btn) {
           btn.onclick = () => onSelectTree(tree);
         }
+      });
+      marker.on('popupclose', () => {
+        setActiveTreeId(prev => (prev === tree.id ? null : prev));
       });
 
       markersRef.current.push(marker);
@@ -287,9 +278,8 @@ export default function TreeGISMap({
         mapInstanceRef.current.invalidateSize();
       }, 100);
     }
-  }, [trees, selectedStatusFilter, searchQuery]);
+  }, [trees, selectedStatusFilter, searchQuery, activeTreeId]);
 
-  // 4. Live Search suggestions via OpenStreetMap Nominatim
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearchQuery(val);
@@ -319,7 +309,6 @@ export default function TreeGISMap({
     }, 350);
   };
 
-  // Fly to selected search place
   const handleSelectPlace = (place) => {
     const lat = parseFloat(place.lat);
     const lng = parseFloat(place.lon);
@@ -336,18 +325,18 @@ export default function TreeGISMap({
 
       const searchPinIcon = L.divIcon({
         className: 'bg-transparent',
-        html: `<div style="background:#10b981; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #ffffff; box-shadow:0 0 16px rgba(16,185,129,0.9); font-size:18px; animation: bounce 1s infinite;">🌱</div>`,
-        iconSize: [34, 34],
-        iconAnchor: [17, 17]
+        html: `<div class="tree-pin tree-pin-healthy" style="width:18px; height:18px; border-width:3px;"></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
       });
 
       const pin = L.marker([lat, lng], { icon: searchPinIcon }).addTo(mapInstanceRef.current);
       pin.bindPopup(`
-        <div style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 4px; text-align: center; min-width: 180px;">
-          <div style="font-size: 11px; color: #10b981; font-weight: 800; margin-bottom: 2px;">📍 ${place.display_name.split(',')[0]}</div>
-          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">${lat.toFixed(4)}°, ${lng.toFixed(4)}°</div>
-          <button id="search-plant-btn" style="background: #10b981; color: #020b08; border: none; font-weight: 800; font-size: 11px; padding: 6px 12px; border-radius: 8px; cursor: pointer; width: 100%;">
-            🌱 Plant Sapling Here
+        <div style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 6px; min-width: 180px;">
+          <div style="font-size: 11px; color: #fafafa; font-weight: 600; margin-bottom: 4px;">${place.display_name.split(',')[0]}</div>
+          <div style="font-size: 10px; color: #6b6b6b; margin-bottom: 8px;">${lat.toFixed(4)}°, ${lng.toFixed(4)}°</div>
+          <button id="search-plant-btn" title="Plant sapling here" aria-label="Plant sapling here" style="background: #22c55e; color: #052e16; border: none; font-weight: 600; font-size: 12px; padding: 7px 12px; border-radius: 6px; cursor: pointer; width: 100%;">
+            Plant sapling here
           </button>
         </div>
       `).openPopup();
@@ -370,71 +359,67 @@ export default function TreeGISMap({
     if (navigator.geolocation && mapInstanceRef.current) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          mapInstanceRef.current.flyTo([pos.coords.latitude, pos.coords.longitude], 14, {
-            duration: 1.5
-          });
+          mapInstanceRef.current.flyTo([pos.coords.latitude, pos.coords.longitude], 14, { duration: 1.5 });
         },
-        (err) => alert("Could not retrieve GPS location.")
+        (err) => toast('Could not retrieve GPS location.', { variant: 'error', title: 'Location unavailable' })
       );
     }
   };
 
   return (
-    <div className="glass-panel p-4 sm:p-6 rounded-3xl space-y-4">
-      
-      {/* Top Map Toolbar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+    <div className="card-elevated overflow-hidden space-y-0">
+
+      <div className="p-5 border-b border-line flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-emerald-400" />
-              GIS Interactive Tree Tracker
-            </h2>
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-              <Sparkles className="w-3 h-3 text-emerald-400" /> Free GIS (No API Key Required)
-            </span>
+          <div className="flex items-center gap-2 mb-1.5">
+            <MapPin className="w-3.5 h-3.5 text-status-healthy" strokeWidth={2} />
+            <span className="eyebrow text-fg-subtle">GIS tree tracker</span>
+            <StatusBadge variant="neutral" label="Free tiles" size="xs" icon={Sparkles} />
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Search any place in the world or click anywhere on the map to drop a planting pin
+          <h2 className="text-h2 text-fg">Sapling registry on the map</h2>
+          <p className="text-body text-fg-muted mt-1.5">
+            Search any place or click the map to plant a sapling
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          
-          {/* Location & Place Search with Autocomplete */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#6b6b6b] absolute left-3 top-1/2 -translate-y-1/2" strokeWidth={2} aria-hidden="true" />
+            <label htmlFor="map-search" className="sr-only">
+              Search a location
+            </label>
             <input
+              id="map-search"
               type="text"
-              placeholder="Search city, address or tree..."
+              placeholder="Search location…"
               value={searchQuery}
               onChange={handleSearchChange}
               onFocus={() => searchSuggestions.length > 0 && setShowSuggestions(true)}
-              className="glass-input pl-8 pr-8 py-1.5 rounded-xl text-xs w-48 sm:w-64"
+              className="input h-8 pl-9 pr-8 text-[12px] w-48 sm:w-64"
+              aria-label="Search a location"
             />
             {isSearchingLocation && (
-              <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin absolute right-3 top-1/2 -translate-y-1/2" />
+              <Loader2 className="w-3.5 h-3.5 text-emerald-500 animate-spin absolute right-3 top-1/2 -translate-y-1/2" strokeWidth={2} />
             )}
 
-            {/* Suggestions Dropdown */}
             {showSuggestions && searchSuggestions.length > 0 && (
-              <div className="absolute left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-emerald-500/30 shadow-2xl p-2 z-[1000] animate-enter text-xs max-h-60 overflow-y-auto space-y-1">
-                <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
-                  <Navigation className="w-3 h-3" /> Global Locations (Click to fly)
+              <div className="absolute left-0 right-0 mt-2 surface shadow-lg p-1 z-[1000] animate-enter max-h-60 overflow-y-auto">
+                <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-[#6b6b6b] flex items-center gap-1 font-medium">
+                  <Navigation className="w-3 h-3" strokeWidth={2} /> Locations
                 </div>
                 {searchSuggestions.map((place, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleSelectPlace(place)}
-                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-emerald-950/50 hover:border-emerald-500/30 border border-transparent transition-all flex items-start gap-2 text-slate-200"
+                    className="w-full text-left px-2.5 py-2 rounded-md hover:bg-[#161616] transition-colors flex items-start gap-2 text-[#a1a1a1]"
                   >
-                    <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <div className="flex-1 overflow-hidden">
-                      <div className="font-semibold text-white truncate text-xs">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" strokeWidth={2} />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-white truncate text-[12px]">
                         {place.display_name.split(',')[0]}
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate">
+                      <div className="text-[10px] text-[#6b6b6b] truncate">
                         {place.display_name}
                       </div>
                     </div>
@@ -444,94 +429,109 @@ export default function TreeGISMap({
             )}
           </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-emerald-500/20 text-xs">
-            {['all', 'Healthy', 'Needs Attention', 'Critical'].map((s) => (
+          <div className="tabs" role="tablist" aria-label="Filter by tree status">
+            {['all', 'Healthy', 'Attention', 'Critical'].map((s) => (
               <button
                 key={s}
+                role="tab"
+                aria-selected={selectedStatusFilter === s}
                 onClick={() => setSelectedStatusFilter(s)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
-                  selectedStatusFilter === s
-                    ? 'bg-emerald-500 text-slate-950 font-bold'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
+                className={`tab ${selectedStatusFilter === s ? 'tab-active' : ''}`}
               >
-                {s === 'all' ? 'All' : s}
+                {s === 'all' ? 'All' : s === 'Needs Attention' ? 'Attn' : s}
               </button>
             ))}
           </div>
 
-          {/* Tile Layer Selector */}
           <div className="relative">
             <button
               onClick={() => setTileMenuOpen(!tileMenuOpen)}
-              className="p-2 rounded-xl bg-slate-900/90 text-slate-300 border border-emerald-500/20 hover:text-emerald-300 transition-all flex items-center gap-1.5 text-xs font-semibold"
-              title="Change Map Tiles"
+              aria-expanded={tileMenuOpen}
+              aria-haspopup="menu"
+              className="btn btn-secondary h-8 text-[12px] focus-ring"
+              title="Map theme"
             >
-              <Layers className="w-4 h-4 text-emerald-400" />
-              <span className="capitalize hidden sm:inline">{tileLayers[activeTileLayer]?.name.split(' ')[0]}</span>
+              <Layers className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
+              <span>{tileLayers[activeTileLayer]?.name}</span>
             </button>
 
             {tileMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-emerald-500/30 shadow-2xl p-2 z-[1000] animate-enter text-xs space-y-1">
-                <div className="px-2 py-1 text-[10px] font-bold text-emerald-400 uppercase">Map Themes</div>
+              <div className="absolute right-0 mt-2 w-44 surface shadow-lg p-1 z-[1000] animate-enter" role="menu">
+                <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-[#6b6b6b] font-medium">
+                  Themes
+                </div>
                 {Object.entries(tileLayers).map(([key, config]) => (
                   <button
                     key={key}
+                    role="menuitemradio"
+                    aria-checked={activeTileLayer === key}
                     onClick={() => { setActiveTileLayer(key); setTileMenuOpen(false); }}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-lg font-medium transition-all flex items-center justify-between ${
-                      activeTileLayer === key 
-                        ? 'bg-emerald-500 text-slate-950 font-bold' 
-                        : 'text-slate-300 hover:bg-slate-800'
+                    className={`w-full text-left px-2.5 py-1.5 rounded-md text-[12px] font-medium transition-colors flex items-center justify-between focus-ring ${
+                      activeTileLayer === key
+                        ? 'bg-emerald-500 text-[#052e16]'
+                        : 'text-[#a1a1a1] hover:bg-[#161616]'
                     }`}
                   >
                     <span>{config.name}</span>
-                    {activeTileLayer === key && <CheckCircle2 className="w-3.5 h-3.5" />}
+                    {activeTileLayer === key && <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />}
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* GPS Locate Me Button */}
           <button
             onClick={locateUser}
-            className="p-2 rounded-xl bg-slate-900/90 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-950/40 hover:border-emerald-400 transition-all"
-            title="Locate Current Position"
+            className="w-8 h-8 inline-flex items-center justify-center rounded-md text-[#a1a1a1] hover:text-white hover:bg-[#161616] border border-[#262626] focus-ring"
+            title="Locate me"
+            aria-label="Locate me on the map"
           >
-            <Crosshair className="w-4 h-4" />
+            <Crosshair className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
       </div>
 
-      {/* Map View Canvas */}
-      <div className="relative w-full h-[540px] sm:h-[620px] rounded-2xl overflow-hidden border border-emerald-500/20 shadow-2xl">
+      <div className="relative w-full h-[560px] sm:h-[640px] bg-[#0a0a0a]">
         <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-        {/* Floating Legend */}
-        <div className="absolute bottom-4 left-4 z-[400] bg-slate-950/85 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-emerald-500/30 text-xs space-y-1.5 shadow-xl hidden sm:block">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Canopy Status</div>
-          <div className="flex items-center gap-2 text-slate-200">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-            <span>Optimal Vigor (Healthy)</span>
+        {/* Empty state overlay when there are no trees yet */}
+        {trees.length === 0 && (
+          <div className="absolute inset-0 z-[500] flex items-center justify-center bg-[#0a0a0a]/85 backdrop-blur-sm pointer-events-none">
+            <div className="pointer-events-auto max-w-sm w-full px-5">
+              <EmptyState
+                icon={Plus}
+                title="No saplings on the map yet"
+                description="Plant your first sapling to drop a pin on the map and start tracking its growth."
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-slate-200">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b]" />
-            <span>Needs Attention</span>
-          </div>
-          <div className="flex items-center gap-2 text-slate-200">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]" />
-            <span>Critical / Disease</span>
-          </div>
+        )}
+
+        {/* Tip */}
+        <div className="absolute top-4 left-4 z-[400] bg-[#0a0a0a]/80 backdrop-blur-sm px-3 py-1.5 rounded-md border border-[#262626] text-[11px] text-[#a1a1a1] font-medium flex items-center gap-1.5">
+          <Plus className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} aria-hidden="true" />
+          <span>Click anywhere to plant a sapling</span>
         </div>
 
-        {/* Pin Drop Tip */}
-        <div className="absolute top-4 left-4 z-[400] bg-emerald-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-emerald-500/30 text-[11px] text-emerald-300 font-semibold flex items-center gap-1.5 shadow-lg">
-          <Plus className="w-3.5 h-3.5" />
-          <span>Click anywhere to plant a new sapling</span>
+        {/* Legend */}
+        <div className="absolute bottom-4 left-4 z-[400] bg-[#0a0a0a]/85 backdrop-blur-sm px-3.5 py-2.5 rounded-md border border-[#262626] text-[11px] space-y-1.5 hidden sm:block">
+          <div className="text-[10px] uppercase tracking-wider text-[#6b6b6b] font-medium">
+            Status
+          </div>
+          <div className="flex items-center gap-2 text-[#a1a1a1]">
+            <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
+            <span>Healthy</span>
+          </div>
+          <div className="flex items-center gap-2 text-[#a1a1a1]">
+            <span className="w-2 h-2 rounded-full bg-[#eab308]" />
+            <span>Attention</span>
+          </div>
+          <div className="flex items-center gap-2 text-[#a1a1a1]">
+            <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
+            <span>Critical</span>
+          </div>
         </div>
       </div>
-
     </div>
   );
 }

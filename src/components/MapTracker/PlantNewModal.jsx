@@ -1,27 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  X, 
-  Sprout, 
-  MapPin, 
-  Crosshair, 
-  CheckCircle2, 
-  Sparkles, 
-  User, 
-  Ruler,
-  Leaf,
+import {
+  Sprout,
+  MapPin,
+  Crosshair,
+  Sparkles,
   Search,
   Map as MapIcon,
-  Loader2
+  Loader2,
+  Leaf,
+  Tag,
+  User,
+  Ruler
 } from 'lucide-react';
 import L from 'leaflet';
-import confetti from 'canvas-confetti';
+import { confettiMajor } from '../../services/confetti';
 import { PLANT_DATABASE } from '../../data/plantDatabase';
+import { Modal, SectionHeader, StatusBadge } from '../ui';
 
-export default function PlantNewModal({ 
-  isOpen, 
-  onClose, 
-  onAddTree, 
-  initialCoords = null 
+export default function PlantNewModal({
+  isOpen,
+  onClose,
+  onAddTree,
+  initialCoords = null
 }) {
   const [name, setName] = useState('');
   const [speciesId, setSpeciesId] = useState(PLANT_DATABASE[0].id);
@@ -33,7 +33,6 @@ export default function PlantNewModal({
   const [heightMeters, setHeightMeters] = useState(1.2);
   const [isFetchingGPS, setIsFetchingGPS] = useState(false);
 
-  // Search & Map Picker State
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -54,7 +53,6 @@ export default function PlantNewModal({
     }
   }, [initialCoords, isOpen]);
 
-  // Initialize or update Mini Map when toggled
   useEffect(() => {
     if (!showMiniMap || !miniMapRef.current) return;
 
@@ -70,16 +68,16 @@ export default function PlantNewModal({
     });
 
     L.tileLayer('https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
       subdomains: 'abcd',
       maxZoom: 19
     }).addTo(map);
 
     const pinIcon = L.divIcon({
-      className: 'custom-tree-pin',
-      html: `<div style="background:#10b981; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #ffffff; box-shadow:0 0 12px rgba(16,185,129,0.8); font-size:14px;">🌱</div>`,
-      iconSize: [28, 28],
-      iconAnchor: [14, 14]
+      className: 'bg-transparent',
+      html: `<div class="tree-pin tree-pin-healthy" style="width:18px; height:18px; border-width:3px;"></div>`,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
     });
 
     const marker = L.marker([lat, lng], { icon: pinIcon, draggable: true }).addTo(map);
@@ -102,9 +100,7 @@ export default function PlantNewModal({
 
     miniMapInstanceRef.current = map;
 
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 200);
+    setTimeout(() => { map.invalidateSize(); }, 200);
 
     return () => {
       if (miniMapInstanceRef.current) {
@@ -114,7 +110,6 @@ export default function PlantNewModal({
     };
   }, [showMiniMap]);
 
-  // Update marker position when lat/lng change
   useEffect(() => {
     if (markerRef.current && miniMapInstanceRef.current) {
       markerRef.current.setLatLng([lat, lng]);
@@ -128,9 +123,9 @@ export default function PlantNewModal({
       const data = await res.json();
       if (data && data.display_name) {
         const parts = [
-          data.address?.road, 
-          data.address?.suburb || data.address?.neighbourhood, 
-          data.address?.city || data.address?.town || data.address?.county, 
+          data.address?.road,
+          data.address?.suburb || data.address?.neighbourhood,
+          data.address?.city || data.address?.town || data.address?.county,
           data.address?.state
         ].filter(Boolean);
         setAddress(parts.join(', ') || data.display_name);
@@ -164,14 +159,11 @@ export default function PlantNewModal({
     }
   };
 
-  // Google Maps / OpenStreetMap live search query
   const handleLocationInputChange = (e) => {
     const val = e.target.value;
     setAddress(val);
 
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
 
     if (val.trim().length < 3) {
       setSearchSuggestions([]);
@@ -213,8 +205,6 @@ export default function PlantNewModal({
     }
   };
 
-  if (!isOpen) return null;
-
   const selectedSpecies = PLANT_DATABASE.find(p => p.id === speciesId) || PLANT_DATABASE[0];
 
   const handleSubmit = (e) => {
@@ -239,157 +229,155 @@ export default function PlantNewModal({
 
     onAddTree(newTreeData);
 
-    // Celebratory confetti
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#10b981', '#34d399', '#059669', '#6ee7b7', '#f59e0b']
-    });
+    confettiMajor();
 
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-950 border border-emerald-500/30 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden animate-enter my-8">
-        
-        {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 p-6 border-b border-emerald-500/20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold shadow-lg shadow-emerald-500/20">
-              <Sprout className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-lg text-white">Register New Sapling</h3>
-              <p className="text-xs text-slate-400">Mint a Digital Twin with Google Maps-style location & QR tag</p>
-            </div>
-          </div>
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      title="Plant a new tree"
+      subtitle="Mint a digital passport with GPS + QR tag"
+      icon={Sprout}
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-5">
-          
-          {/* Tree Name / Identifier */}
+        {/* IDENTITY */}
+        <section className="space-y-3">
+          <SectionHeader
+            eyebrow="Identity"
+            title="Name your sapling"
+            description="A short label so you can find it on the map and in the field."
+            icon={Tag}
+            size="sm"
+          />
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-              Tree Identity / Custom Nickname
+            <label className="block eyebrow text-fg-subtle mb-1.5">
+              Tree name
             </label>
             <input
               type="text"
               required
+              data-autofocus
               placeholder="e.g. Green Corridor Neem #24"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="glass-input w-full px-4 py-2.5 rounded-xl text-xs"
+              className="input w-full h-9 px-3 text-[13px]"
             />
           </div>
+        </section>
 
-          {/* Species Selector */}
+        {/* SPECIES */}
+        <section className="space-y-3">
+          <SectionHeader
+            eyebrow="Species"
+            title="What did you plant?"
+            description="Used to model CO₂ absorption and care requirements."
+            icon={Leaf}
+            size="sm"
+          />
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-              Botanical Species
+            <label className="block eyebrow text-fg-subtle mb-1.5">
+              Species
             </label>
             <select
               value={speciesId}
               onChange={(e) => setSpeciesId(e.target.value)}
-              className="glass-input w-full px-4 py-2.5 rounded-xl text-xs"
+              className="input w-full h-9 px-3 text-[13px]"
             >
               {PLANT_DATABASE.map((p) => (
-                <option key={p.id} value={p.id} className="bg-slate-900 text-white">
-                  {p.name} ({p.scientificName}) — {p.category}
+                <option key={p.id} value={p.id} className="bg-surface-2 text-fg">
+                  {p.name} ({p.scientificName})
                 </option>
               ))}
             </select>
 
-            {/* Species Highlight pill */}
-            <div className="mt-2 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/20 text-xs text-emerald-300 flex items-center justify-between">
+            <div className="mt-2 p-2.5 rounded-md border border-line bg-surface-inset text-[12px] text-fg-muted flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Leaf className="w-3.5 h-3.5" />
-                <span>Annual Carbon Sequestration: <b>{selectedSpecies.co2Absorption} kg/yr</b></span>
+                <Leaf className="w-3.5 h-3.5 text-accent" strokeWidth={2} />
+                <span>CO₂: <b className="text-fg">{selectedSpecies.co2Absorption} kg/yr</b></span>
               </span>
-              <span className="text-[10px] uppercase font-bold text-emerald-400">
-                {selectedSpecies.difficulty} Care
-              </span>
+              <StatusBadge variant="neutral" label={selectedSpecies.difficulty} size="xs" />
             </div>
           </div>
+        </section>
 
-          {/* Location Search with Google Maps-style Autocomplete & Mini Map */}
+        {/* LOCATION */}
+        <section className="space-y-3">
+          <SectionHeader
+            eyebrow="Location"
+            title="Where is it planted?"
+            description="Used for the GIS pin, neighborhood analytics, and the QR tag."
+            icon={MapPin}
+            size="sm"
+          />
           <div className="relative">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300">
-                Location & Coordinates
+              <label className="block eyebrow text-fg-subtle">
+                Address or landmark
               </label>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setShowMiniMap(!showMiniMap)}
-                  className={`text-[11px] font-semibold flex items-center gap-1 transition-all ${
-                    showMiniMap ? 'text-teal-300 underline' : 'text-slate-400 hover:text-emerald-300'
-                  }`}
+                  className="text-[11px] font-medium text-fg-muted hover:text-accent flex items-center gap-1 transition-colors focus-ring rounded"
                 >
-                  <MapIcon className="w-3.5 h-3.5" />
-                  <span>{showMiniMap ? "Hide Map" : "Pick on Map"}</span>
+                  <MapIcon className="w-3.5 h-3.5" strokeWidth={2} />
+                  <span>{showMiniMap ? "Hide map" : "Pick on map"}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={getDeviceGPS}
                   disabled={isFetchingGPS}
-                  className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+                  className="text-[11px] font-medium text-accent hover:text-accent-hover flex items-center gap-1 transition-colors focus-ring rounded"
                 >
-                  <Crosshair className="w-3.5 h-3.5" />
-                  <span>{isFetchingGPS ? "Acquiring..." : "GPS"}</span>
+                  <Crosshair className="w-3.5 h-3.5" strokeWidth={2} />
+                  <span>{isFetchingGPS ? "Acquiring…" : "GPS"}</span>
                 </button>
               </div>
             </div>
 
-            {/* Search Input with Icon */}
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-fg-subtle">
                 {isSearchingLocation ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" strokeWidth={2} />
                 ) : (
-                  <Search className="w-4 h-4 text-emerald-400" />
+                  <Search className="w-3.5 h-3.5 text-accent" strokeWidth={2} />
                 )}
               </div>
               <input
                 type="text"
                 required
-                placeholder="Search landmark, park, college campus, or street..."
+                placeholder="Search landmark, park, or street…"
                 value={address}
                 onChange={handleLocationInputChange}
                 onFocus={() => { if (searchSuggestions.length > 0) setShowSuggestions(true); }}
-                className="glass-input w-full pl-9 pr-4 py-2.5 rounded-xl text-xs"
+                className="input w-full h-9 pl-9 pr-3 text-[13px]"
               />
             </div>
 
-            {/* Floating Google Maps-style Suggestions Dropdown */}
             {showSuggestions && searchSuggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 bg-slate-900/95 backdrop-blur-xl border border-emerald-500/30 rounded-2xl shadow-2xl p-2 z-50 animate-enter max-h-56 overflow-y-auto space-y-1">
-                <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Matching Locations
+              <div className="absolute left-0 right-0 top-full mt-1.5 surface shadow-lg p-1 z-50 modal-panel max-h-56 overflow-y-auto">
+                <div className="px-2 py-1.5 eyebrow text-fg-subtle">
+                  Matching locations
                 </div>
                 {searchSuggestions.map((place, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleSelectSuggestion(place)}
-                    className="w-full text-left p-2.5 rounded-xl hover:bg-emerald-950/60 border border-transparent hover:border-emerald-500/30 transition-all flex items-start gap-2.5 group"
+                    className="w-full text-left p-2.5 rounded-md hover:bg-surface-1 transition-colors flex items-start gap-2.5 group"
                   >
-                    <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
-                    <div className="truncate text-xs">
-                      <div className="font-bold text-white group-hover:text-emerald-300 truncate">
+                    <MapPin className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" strokeWidth={2} />
+                    <div className="min-w-0">
+                      <div className="font-medium text-fg text-[12px] truncate">
                         {place.display_name.split(',')[0]}
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate">
+                      <div className="text-[10px] text-fg-subtle truncate">
                         {place.display_name}
                       </div>
                     </div>
@@ -398,49 +386,48 @@ export default function PlantNewModal({
               </div>
             )}
 
-            {/* Mini Map Picker View */}
             {showMiniMap && (
-              <div className="mt-3 rounded-2xl overflow-hidden border border-emerald-500/30 relative">
+              <div className="mt-3 rounded-md overflow-hidden border border-line relative">
                 <div className="h-44 w-full" ref={miniMapRef} />
-                <div className="absolute bottom-2 left-2 z-[400] bg-slate-950/90 backdrop-blur-md px-2.5 py-1 rounded-lg border border-emerald-500/30 text-[10px] text-emerald-300 font-semibold">
-                  👆 Click map or drag pin to position sapling
+                <div className="absolute bottom-2 left-2 z-[400] bg-surface-page/85 backdrop-blur-sm px-2.5 py-1 rounded-md border border-line text-[10px] text-fg-muted font-medium">
+                  Click or drag pin to position
                 </div>
               </div>
             )}
 
-            <div className="text-[10px] text-slate-500 font-mono mt-1 flex items-center justify-between">
-              <span>Coordinates: {lat.toFixed(4)}° N, {lng.toFixed(4)}° E</span>
-              {showSuggestions && (
-                <button
-                  type="button"
-                  onClick={() => setShowSuggestions(false)}
-                  className="text-slate-400 hover:text-white underline text-[10px]"
-                >
-                  Close Suggestions
-                </button>
-              )}
+            <div className="text-[10px] text-fg-subtle font-mono mt-1.5 nums">
+              {lat.toFixed(4)}°N, {lng.toFixed(4)}°E
             </div>
           </div>
+        </section>
 
-          {/* Planter & Height Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* CARE */}
+        <section className="space-y-3">
+          <SectionHeader
+            eyebrow="Care"
+            title="Guardian + initial size"
+            description="Used for XP, accountability, and the growth trajectory model."
+            icon={User}
+            size="sm"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                Planter / Guardian Name
+              <label className="block eyebrow text-fg-subtle mb-1.5">
+                Planter
               </label>
               <input
                 type="text"
                 required
-                placeholder="Your Name"
+                placeholder="Your name"
                 value={planter}
                 onChange={(e) => setPlanter(e.target.value)}
-                className="glass-input w-full px-4 py-2.5 rounded-xl text-xs"
+                className="input w-full h-9 px-3 text-[13px]"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                Sapling Height (Meters)
+              <label className="block eyebrow text-fg-subtle mb-1.5">
+                Height (m)
               </label>
               <input
                 type="number"
@@ -450,23 +437,20 @@ export default function PlantNewModal({
                 required
                 value={heightMeters}
                 onChange={(e) => setHeightMeters(e.target.value)}
-                className="glass-input w-full px-4 py-2.5 rounded-xl text-xs"
+                className="input w-full h-9 px-3 text-[13px]"
               />
             </div>
           </div>
+        </section>
 
-          {/* Submit Action */}
-          <button
-            type="submit"
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-sm shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all mt-6"
-          >
-            <Sparkles className="w-4 h-4 stroke-[2.5]" />
-            <span>Mint Tree Digital Twin & Register</span>
-          </button>
-
-        </form>
-
-      </div>
-    </div>
+        <button
+          type="submit"
+          className="btn btn-primary w-full h-10"
+        >
+          <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+          <span>Register tree</span>
+        </button>
+      </form>
+    </Modal>
   );
 }

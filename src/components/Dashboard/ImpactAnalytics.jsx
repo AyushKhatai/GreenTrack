@@ -1,19 +1,18 @@
 import React from 'react';
-import { 
-  Chart as ChartJS, 
-  ArcElement, 
-  Tooltip, 
-  Legend, 
-  CategoryScale, 
-  LinearScale, 
-  PointElement, 
-  LineElement, 
-  BarElement, 
-  Title, 
-  Filler 
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler
 } from 'chart.js';
-import { Doughnut, Line, Bar } from 'react-chartjs-2';
-import { Leaf, Car, Zap, CloudRain, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Doughnut, Line } from 'react-chartjs-2';
+import { Leaf, Car, Zap, CloudRain, Wind, Activity } from 'lucide-react';
+import { StatNumber, StatusBadge, statusVariant, StatTile } from '../ui';
 
 ChartJS.register(
   ArcElement,
@@ -23,26 +22,23 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
-  Title,
   Filler
 );
 
 export default function ImpactAnalytics({ aggregateImpact, trees = [] }) {
-  // Health Distribution Data
   const doughnutData = {
-    labels: ['Optimal Vigor', 'Needs Attention', 'Critical / Blight'],
+    labels: ['Healthy', 'Attention', 'Critical'],
     datasets: [
       {
         data: aggregateImpact.healthDistribution || [5, 1, 1],
         backgroundColor: [
-          '#10b981', // emerald-500
-          '#f59e0b', // amber-500
-          '#ef4444', // red-500
+          '#22c55e',
+          '#eab308',
+          '#ef4444',
         ],
-        borderColor: '#071912',
-        borderWidth: 3,
-        hoverOffset: 6
+        borderColor: '#0a0a0a',
+        borderWidth: 2,
+        hoverOffset: 4
       },
     ],
   };
@@ -52,29 +48,23 @@ export default function ImpactAnalytics({ aggregateImpact, trees = [] }) {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'bottom',
-        labels: {
-          color: '#cbd5e1',
-          font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
-          padding: 14,
-          usePointStyle: true,
-          pointStyle: 'circle'
-        }
+        display: false
       },
       tooltip: {
-        backgroundColor: 'rgba(7, 25, 18, 0.95)',
-        titleColor: '#10b981',
-        bodyColor: '#f1f5f9',
-        borderColor: 'rgba(52, 211, 153, 0.3)',
+        backgroundColor: '#161616',
+        titleColor: '#fafafa',
+        bodyColor: '#a1a1a1',
+        borderColor: '#262626',
         borderWidth: 1,
-        padding: 12,
-        cornerRadius: 12
+        padding: 10,
+        cornerRadius: 8,
+        titleFont: { size: 12, weight: '600' },
+        bodyFont: { size: 11 }
       }
     },
-    cutout: '72%'
+    cutout: '74%'
   };
 
-  // Carbon Trajectory Line Chart
   const months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const baseCo2 = aggregateImpact.totalCo2Kg || 120;
   const lineData = {
@@ -82,7 +72,7 @@ export default function ImpactAnalytics({ aggregateImpact, trees = [] }) {
     datasets: [
       {
         fill: true,
-        label: 'CO₂ Sequestered (kg)',
+        label: 'CO₂ sequestered',
         data: [
           Math.round(baseCo2 * 0.35),
           Math.round(baseCo2 * 0.50),
@@ -91,14 +81,15 @@ export default function ImpactAnalytics({ aggregateImpact, trees = [] }) {
           Math.round(baseCo2 * 0.92),
           Math.round(baseCo2)
         ],
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.12)',
-        tension: 0.4,
-        pointBackgroundColor: '#34d399',
-        pointBorderColor: '#071912',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34, 197, 94, 0.06)',
+        borderWidth: 1.5,
+        tension: 0.35,
+        pointBackgroundColor: '#22c55e',
+        pointBorderColor: '#0a0a0a',
+        pointBorderWidth: 1.5,
+        pointRadius: 2.5,
+        pointHoverRadius: 4
       }
     ]
   };
@@ -109,158 +100,132 @@ export default function ImpactAnalytics({ aggregateImpact, trees = [] }) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(7, 25, 18, 0.95)',
-        titleColor: '#34d399',
-        bodyColor: '#f1f5f9',
-        borderColor: 'rgba(52, 211, 153, 0.3)',
+        backgroundColor: '#161616',
+        titleColor: '#fafafa',
+        bodyColor: '#a1a1a1',
+        borderColor: '#262626',
         borderWidth: 1,
-        padding: 12,
-        cornerRadius: 12
+        padding: 10,
+        cornerRadius: 8
       }
     },
     scales: {
       x: {
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: '#94a3b8', font: { size: 10, family: 'Plus Jakarta Sans' } }
+        grid: { display: false, drawBorder: false },
+        ticks: { color: '#6b6b6b', font: { size: 10, family: 'Plus Jakarta Sans' } }
       },
       y: {
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: '#94a3b8', font: { size: 10, family: 'Plus Jakarta Sans' } }
+        grid: { color: '#1a1a1a', drawBorder: false },
+        ticks: { color: '#6b6b6b', font: { size: 10, family: 'Plus Jakarta Sans' } }
       }
     }
   };
 
   return (
-    <div className="space-y-6">
-      
-      {/* 2-Column Visual Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Carbon Offset Trajectory Line Chart */}
-        <div className="lg:col-span-2 glass-panel p-6 rounded-3xl relative">
-          <div className="flex items-center justify-between mb-6">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+
+        {/* Carbon trajectory line */}
+        <div className="card lg:col-span-2 p-5">
+          <div className="flex items-start justify-between mb-5 gap-3">
             <div>
-              <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                <Leaf className="w-5 h-5 text-emerald-400" />
-                Carbon Sequestration Trajectory
-              </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Cumulative carbon captured as sapling root & canopy biomass matures
-              </p>
+              <div className="flex items-center gap-2 mb-1.5">
+                <Activity className="w-3.5 h-3.5 text-fg-subtle" strokeWidth={2} />
+                <span className="eyebrow text-fg-subtle">Trajectory</span>
+              </div>
+              <h3 className="text-h3 text-fg">Carbon sequestration</h3>
+              <p className="text-body text-fg-muted mt-1.5">Cumulative kg captured over the last 6 months</p>
             </div>
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-              Live Photosynthesis Model
-            </span>
+            <StatusBadge variant="live" label="Live model" pulse />
           </div>
 
-          <div className="h-64 sm:h-72 w-full">
+          <div className="h-64 w-full">
             <Line data={lineData} options={lineOptions} />
           </div>
         </div>
 
-        {/* Health Distribution Doughnut */}
-        <div className="glass-panel p-6 rounded-3xl flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-teal-400" />
-                Canopy Health Ratio
-              </h3>
-            </div>
-            <p className="text-xs text-slate-400 mb-4">
-              AI Diagnostic breakdown across tracked trees
-            </p>
+        {/* Health ratio doughnut */}
+        <div className="card p-5 flex flex-col">
+          <div className="mb-3">
+            <div className="eyebrow text-fg-subtle mb-1.5">Distribution</div>
+            <h3 className="text-h3 text-fg">Canopy health</h3>
+            <p className="text-body text-fg-muted mt-1">AI diagnostic breakdown</p>
           </div>
 
-          <div className="h-56 relative flex items-center justify-center">
+          <div className="flex-1 relative flex items-center justify-center min-h-[160px]">
             <Doughnut data={doughnutData} options={doughnutOptions} />
-            <div className="absolute flex flex-col items-center justify-center pointer-events-none mb-6">
-              <span className="text-2xl font-black text-white">
-                {aggregateImpact.survivalRate}%
-              </span>
-              <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
-                Survival
-              </span>
+            <div className="absolute flex flex-col items-center pointer-events-none">
+              <StatNumber
+                value={`${aggregateImpact.survivalRate}%`}
+                size="lg"
+                tone={statusVariant(
+                  aggregateImpact.survivalRate >= 80 ? 'Healthy'
+                  : aggregateImpact.survivalRate >= 60 ? 'Needs Attention'
+                  : 'Critical'
+                )}
+              />
+              <span className="eyebrow text-fg-subtle mt-1">Survival</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-center pt-4 border-t border-emerald-500/10 text-xs">
-            <div className="bg-emerald-950/40 p-2 rounded-xl border border-emerald-500/20">
-              <div className="font-bold text-emerald-400">{aggregateImpact.healthyCount}</div>
-              <div className="text-[10px] text-slate-400">Healthy</div>
+          <div className="grid grid-cols-3 gap-2 pt-4 mt-3 border-t border-line">
+            <div className="text-center">
+              <StatNumber value={aggregateImpact.healthyCount} size="sm" tone="healthy" />
+              <div className="eyebrow text-fg-subtle mt-1.5">Healthy</div>
             </div>
-            <div className="bg-amber-950/40 p-2 rounded-xl border border-amber-500/20">
-              <div className="font-bold text-amber-400">{aggregateImpact.attentionCount}</div>
-              <div className="text-[10px] text-slate-400">Attention</div>
+            <div className="text-center">
+              <StatNumber value={aggregateImpact.attentionCount} size="sm" tone="attention" />
+              <div className="eyebrow text-fg-subtle mt-1.5">Attention</div>
             </div>
-            <div className="bg-red-950/40 p-2 rounded-xl border border-red-500/20">
-              <div className="font-bold text-red-400">{aggregateImpact.criticalCount}</div>
-              <div className="text-[10px] text-slate-400">Critical</div>
+            <div className="text-center">
+              <StatNumber value={aggregateImpact.criticalCount} size="sm" tone="critical" />
+              <div className="eyebrow text-fg-subtle mt-1.5">Critical</div>
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* Environmental Equivalencies Bar */}
-      <div className="glass-panel p-6 rounded-3xl">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-emerald-400" />
-          Real-World Ecological Footprint Equivalents
-        </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          
-          <div className="bg-slate-900/60 p-4 rounded-2xl border border-emerald-500/10 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
-              <Car className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="text-xl font-bold text-white">
-                {aggregateImpact.carKmOffset.toLocaleString()} km
-              </div>
-              <div className="text-xs text-slate-400">Gasoline vehicle emissions cancelled</div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 p-4 rounded-2xl border border-teal-500/10 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center shrink-0">
-              <Zap className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="text-xl font-bold text-white">
-                {Math.round(aggregateImpact.totalCo2Kg / 0.008).toLocaleString()}
-              </div>
-              <div className="text-xs text-slate-400">Smartphone full battery charges</div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 p-4 rounded-2xl border border-cyan-500/10 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center shrink-0">
-              <CloudRain className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="text-xl font-bold text-white">
-                {aggregateImpact.totalStormwaterGal.toLocaleString()} gal
-              </div>
-              <div className="text-xs text-slate-400">Urban stormwater runoff filtered</div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 p-4 rounded-2xl border border-amber-500/10 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
-              <Leaf className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="text-xl font-bold text-white">
-                {aggregateImpact.totalO2Kg} kg
-              </div>
-              <div className="text-xs text-slate-400">Pure clean Oxygen released</div>
-            </div>
-          </div>
-
+      {/* Equivalencies */}
+      <div className="card p-5">
+        <div className="eyebrow text-fg-subtle mb-4">Environmental equivalents</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <Equiv
+            icon={Car}
+            value={`${aggregateImpact.carKmOffset.toLocaleString()}`}
+            unit="km"
+            label="Vehicle emissions cancelled"
+          />
+          <Equiv
+            icon={Zap}
+            value={Math.round(aggregateImpact.totalCo2Kg / 0.008).toLocaleString()}
+            label="Phone charges offset"
+          />
+          <Equiv
+            icon={CloudRain}
+            value={`${aggregateImpact.totalStormwaterGal.toLocaleString()}`}
+            unit="gal"
+            label="Stormwater filtered"
+          />
+          <Equiv
+            icon={Wind}
+            value={`${aggregateImpact.totalO2Kg}`}
+            unit="kg"
+            label="Oxygen released"
+          />
         </div>
       </div>
+    </div>
+  );
+}
 
+function Equiv({ icon: Icon, value, label, unit }) {
+  return (
+    <div className="card-inset flex items-center gap-3 p-3 min-w-0">
+      <Icon className="w-4 h-4 text-status-healthy shrink-0" strokeWidth={2} />
+      <div className="min-w-0">
+        <StatNumber value={value} unit={unit} size="sm" />
+        <div className="text-caption text-fg-subtle mt-1 truncate" style={{ fontSize: '11px', lineHeight: '16px' }}>{label}</div>
+      </div>
     </div>
   );
 }
